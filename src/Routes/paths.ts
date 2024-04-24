@@ -5,6 +5,10 @@ import jwt from "jsonwebtoken";
 import userModal from "../Schema";
 const router = express.Router();
 dotenv.config();
+
+router.get("/", (req, res) => {
+  res.send("Hello");
+});
 // ----------------------ADD TO CART-----------------------
 function setCookies(req: Request, res: Response, next: any) {
   const myurl = url.parse(req.url, true);
