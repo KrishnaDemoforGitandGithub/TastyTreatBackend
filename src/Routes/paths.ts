@@ -26,14 +26,17 @@ function setCookies(req: Request, res: Response, next: any) {
   res.clearCookie("items");
 
   res.cookie("items", items, { httpOnly: true });
-  const result = req.cookies.items.map((itemToken: any) =>
-    jwt.verify(itemToken, process.env.SECRET_KEY || "")
-  );
-  res.json(result);
+
   next();
 }
 
-router.get("/addToCart", setCookies, (req: Request, res: Response) => {});
+router.get("/addToCart", setCookies, (req: Request, res: Response) => {
+  const result =
+    req.cookies.items?.map((itemToken: any) =>
+      jwt.verify(itemToken, process.env.SECRET_KEY || "")
+    ) || [];
+  res.json(result);
+});
 // ------------------------------END OF ADD TO CART------------------------
 
 // -------------------------------REMOVE FROM CART-------------------------
@@ -42,15 +45,13 @@ function removeItemFromCookie(req: Request, res: Response, next: any) {
   const myurl = url.parse(req.url, true);
   let items = [];
   items = req.cookies.items;
-  let item = {
-    itemIndex: Number(myurl.query.index),
-    quantity: Number(myurl.query.quantity),
-  };
 
   const idx = items.find((item: any) => {
     item = jwt.verify(item, process.env.SECRET_KEY || "");
-    item.itemIndex == Number(myurl.query.index) &&
-      item.quantity == Number(myurl.query.quantity);
+    return (
+      item.itemIndex == Number(myurl.query.index) &&
+      item.quantity == Number(myurl.query.quantity)
+    );
   });
 
   items.splice(items.indexOf(idx), 1);
@@ -92,9 +93,11 @@ router.get("/getFoodItems", async (req: Request, res: Response) => {
 
 // -------------------------GET COOKIES--------------------
 router.get("/getcartItems", (req: Request, res: Response) => {
-  const result = req.cookies.items.map((itemToken: any) =>
-    jwt.verify(itemToken, process.env.SECRET_KEY || "")
-  );
+  const result = req.cookies.items
+    ? req.cookies.items.map((itemToken: any) =>
+        jwt.verify(itemToken, process.env.SECRET_KEY || "")
+      )
+    : 0;
   res.json(result);
 });
 export default router;
