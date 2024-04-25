@@ -29,7 +29,11 @@ function setCookies(req: Request, res: Response, next: any) {
 
   res.clearCookie("items");
 
-  res.cookie("items", items, { httpOnly: true });
+  res.cookie("items", items, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
 
   next();
 }
@@ -63,7 +67,11 @@ function removeItemFromCookie(req: Request, res: Response, next: any) {
   res.clearCookie("items");
 
   res.cookie("items", items);
-  res.cookie("items", items, { httpOnly: true });
+  res.cookie("items", items, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
   // -----------------------------Jwt Verification-----------------
   const result = req.cookies.items.map((itemToken: any) =>
     jwt.verify(itemToken, process.env.SECRET_KEY || "")
