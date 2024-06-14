@@ -25,51 +25,32 @@ router.get("/", (req, res) => {
 // ----------------------ADD TO CART-----------------------
 function setCookies(req, res, next) {
     const myurl = url_1.default.parse(req.url, true);
-    let items = [];
     // -------------------Convert to jwt--------------------
     const token = jsonwebtoken_1.default.sign({
         itemIndex: Number(myurl.query.index),
         quantity: Number(myurl.query.quantity),
     }, process.env.SECRET_KEY || "");
     // ------------------End----------------------
-    items = req.cookies.items ? req.cookies.items : [];
-    items.push(token);
-    res.clearCookie("items");
-    res.cookie("items", items, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-    });
+    res.send(token);
     next();
 }
-router.get("/addToCart", setCookies, (req, res) => {
-    var _a;
-    const result = ((_a = req.cookies.items) === null || _a === void 0 ? void 0 : _a.map((itemToken) => jsonwebtoken_1.default.verify(itemToken, process.env.SECRET_KEY || ""))) || [];
-    res.json(result);
-});
+router.get("/addToCart", setCookies, (req, res) => { });
 // ------------------------------END OF ADD TO CART------------------------
 // -------------------------------REMOVE FROM CART-------------------------
 function removeItemFromCookie(req, res, next) {
     const myurl = url_1.default.parse(req.url, true);
-    let items = [];
-    if (req.cookies.items) {
-        items = req.cookies.items;
-        const idx = items.find((item) => {
+    let storedItems = myurl.query.jwtitems;
+    if (storedItems && storedItems !== "null") {
+        let tempitems = storedItems.split(",");
+        const idx = tempitems.find((item) => {
             item = jsonwebtoken_1.default.verify(item, process.env.SECRET_KEY || "");
-            return (item.itemIndex == Number(myurl.query.index) &&
-                item.quantity == Number(myurl.query.quantity));
+            return item.iat == Number(myurl.query.iat);
         });
-        items.splice(items.indexOf(idx), 1);
-        res.clearCookie("items");
-        res.cookie("items", items);
-        res.cookie("items", items, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-        });
-        // -----------------------------Jwt Verification-----------------
-        const result = req.cookies.items.map((itemToken) => jsonwebtoken_1.default.verify(itemToken, process.env.SECRET_KEY || ""));
-        res.json(result);
+        tempitems.splice(tempitems.indexOf(idx), 1);
+        if (tempitems.length == 0)
+            res.send(null);
+        else
+            res.send(tempitems.join(","));
     }
     // -------------------------------End----------------------------
     next();
@@ -93,10 +74,20 @@ router.get("/getFoodItems", (req, res) => __awaiter(void 0, void 0, void 0, func
 }));
 // -------------------------GET COOKIES--------------------
 router.get("/getcartItems", (req, res) => {
-    const result = req.cookies.items
-        ? req.cookies.items.map((itemToken) => jsonwebtoken_1.default.verify(itemToken, process.env.SECRET_KEY || ""))
-        : 0;
-    res.json(result);
+    const myurl = url_1.default.parse(req.url, true);
+    let storedItems = myurl.query.jwtitems;
+    if (storedItems && storedItems !== "null") {
+        let tempitems = storedItems.split(",");
+        const items = [];
+        tempitems.forEach((token) => {
+            const decoded = jsonwebtoken_1.default.verify(token, process.env.SECRET_KEY || "");
+            items.push(decoded);
+        });
+        res.json(items);
+    }
+    else {
+        res.send(null);
+    }
 });
 exports.default = router;
 //# sourceMappingURL=paths.js.map
